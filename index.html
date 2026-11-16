@@ -6,10 +6,10 @@
   <title>E2E On-Call Roster</title>
   <!-- SheetJS for Excel (.xlsx) Parsing & Template Generation -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-  <!-- Firebase SDKs -->
+  <!-- Firebase Realtime Database SDKs -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBQhh0ElwhnI3z2eLLZVz545XEe23JpMcs",
@@ -23,10 +23,10 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const rosterDocRef = doc(db, "roster", "main_data");
+    const db = getDatabase(app);
+    const rosterRef = ref(db, "roster/main_data");
 
-    // Default Fallback Data if Firestore is empty
+    // Default Fallback Data if Database is empty
     const defaultData = {
       "pin": "0000",
       "assignments": [
@@ -82,17 +82,17 @@
 
     window.appState = defaultData;
 
-    async function initFirestore() {
+    async function initRealtimeDB() {
       try {
-        const snap = await getDoc(rosterDocRef);
-        if (snap.exists()) {
-          window.appState = snap.data();
+        const snapshot = await get(rosterRef);
+        if (snapshot.exists()) {
+          window.appState = snapshot.val();
         } else {
+          await set(rosterRef, defaultData);
           window.appState = defaultData;
-          await setDoc(rosterDocRef, defaultData);
         }
       } catch (err) {
-        console.error("Firestore init error:", err);
+        console.error("DB init error:", err);
         window.appState = defaultData;
       }
       
@@ -100,9 +100,10 @@
         window.renderAll();
       }
 
-      onSnapshot(rosterDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          window.appState = docSnap.data();
+      // Real-time listener across all users and tabs
+      onValue(rosterRef, (snapshot) => {
+        if (snapshot.exists()) {
+          window.appState = snapshot.val();
           if (typeof window.renderAll === "function") {
             window.renderAll();
           }
@@ -112,14 +113,14 @@
 
     window.persistStateToCloud = async function() {
       try {
-        await setDoc(rosterDocRef, window.appState);
+        await set(rosterRef, window.appState);
       } catch (err) {
-        console.error("Failed to save to Firestore:", err);
+        console.error("Failed to save to Database:", err);
         alert("Failed to save changes to cloud database.");
       }
     };
 
-    initFirestore();
+    initRealtimeDB();
   </script>
 
   <style>
@@ -420,7 +421,7 @@
     }
     .dropzone:hover { border-color: var(--primary); background: var(--primary-soft); }
     .form-row {
-      display: flex; flex-wrap: gap; gap: 0.75rem; margin-bottom: 1rem; align-items: end;
+      display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; align-items: end;
     }
     .form-group { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 150px; }
     .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
