@@ -80,7 +80,6 @@
       ]
     };
 
-
     window.appState = defaultData;
 
     // Fetch initial state or initialize Firestore if empty
@@ -95,15 +94,14 @@
         }
       } catch (err) {
         console.error("Firestore init error:", err);
-        window.appState = defaultData; // Fallback on error
+        window.appState = defaultData;
       }
       
-      // Force immediate render once state is available
       if (typeof window.renderAll === "function") {
         window.renderAll();
       }
 
-      // Real-time listener across all users
+      // Real-time listener across all users and tabs
       onSnapshot(rosterDocRef, (docSnap) => {
         if (docSnap.exists()) {
           window.appState = docSnap.data();
@@ -824,11 +822,11 @@
     document.getElementById("manageContent").style.display = "none";
   }
 
-  function updatePin() {
+  window.updatePin = async function() {
     const newPin = document.getElementById("newPinInput").value.trim();
     if (!newPin) return;
     window.appState.pin = newPin;
-    window.persistStateToCloud();
+    await window.persistStateToCloud();
     document.getElementById("newPinInput").value = "";
     showBanner("pinChangeStatus", "PIN updated successfully!");
   }
@@ -1076,7 +1074,7 @@
     return dates;
   }
 
-  window.saveManualShift = function() {
+  window.saveManualShift = async function() {
     const start = document.getElementById("manualStartDate").value;
     const end = document.getElementById("manualEndDate").value;
     const pri = document.getElementById("manualPrimary").value.trim();
@@ -1094,23 +1092,23 @@
       if (sec) window.appState.assignments.push({ date: d, engineer: sec });
     });
 
-    window.persistStateToCloud();
+    await window.persistStateToCloud();
     window.renderAll();
     showBanner("manualStatus", `Updated ${targetDates.length} day(s) starting ${start}.`);
   }
 
-  window.clearDateShift = function() {
+  window.clearDateShift = async function() {
     const start = document.getElementById("manualStartDate").value;
     const end = document.getElementById("manualEndDate").value;
     if (!start) return;
     const targetDates = getDatesBetween(start, end);
     window.appState.assignments = window.appState.assignments.filter(a => !targetDates.includes(a.date));
-    window.persistStateToCloud();
+    await window.persistStateToCloud();
     window.renderAll();
     showBanner("manualStatus", `Cleared assignments for ${targetDates.length} day(s).`);
   }
 
-  window.addOrUpdateContact = function() {
+  window.addOrUpdateContact = async function() {
     const name = document.getElementById("newContactName").value.trim();
     const phone = document.getElementById("newContactPhone").value.trim();
     const email = document.getElementById("newContactEmail").value.trim();
@@ -1125,7 +1123,8 @@
     document.getElementById("newContactName").value = "";
     document.getElementById("newContactPhone").value = "";
     document.getElementById("newContactEmail").value = "";
-    window.persistStateToCloud();
+    
+    await window.persistStateToCloud();
     window.renderAll();
     renderManageTables();
   }
@@ -1137,9 +1136,9 @@
     document.getElementById("newContactEmail").value = c.email;
   }
 
-  window.deleteContact = function(idx) {
+  window.deleteContact = async function(idx) {
     window.appState.contacts.splice(idx, 1);
-    window.persistStateToCloud();
+    await window.persistStateToCloud();
     window.renderAll();
     renderManageTables();
   }
@@ -1211,12 +1210,12 @@
     return null;
   }
 
-  window.handleExcelUpload = function(event) {
+  window.handleExcelUpload = async function(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
       try {
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: "array", cellDates: true });
@@ -1230,7 +1229,7 @@
           const rawEng = r["Engineer Name"] || r["Engineer"] || r["Name"];
           const iso = parseExcelDate(rawDate);
           if (iso && rawEng) {
-            newAssignments.push({ date: iso, engineer: String(rawEng).trim() });
+            newAssignments.push({ date: iso, engineer: String(rawEng).trim() };
           }
         });
 
@@ -1265,7 +1264,7 @@
           }
         }
 
-        window.persistStateToCloud();
+        await window.persistStateToCloud();
         window.renderAll();
         renderManageTables();
         showBanner("uploadStatus", `Successfully imported ${newAssignments.length} shift entries from "${file.name}".`);
