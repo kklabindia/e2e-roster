@@ -83,18 +83,52 @@
     window.appState = defaultData;
 
     // Fetch initial state or initialize Firestore if empty
+    // async function initFirestore() {
+    //   try {
+    //     const snap = await getDoc(rosterDocRef);
+    //     if (snap.exists()) {
+    //       window.appState = snap.data();
+    //     } else {
+    //       await setDoc(rosterDocRef, defaultData);
+    //     }
+    //     if (window.renderAll) window.renderAll();
+    //   } catch (err) {
+    //     console.error("Firestore init error:", err);
+    //   }
+
+    // Fetch initial state or initialize Firestore if empty
     async function initFirestore() {
       try {
         const snap = await getDoc(rosterDocRef);
         if (snap.exists()) {
           window.appState = snap.data();
         } else {
+          window.appState = defaultData;
           await setDoc(rosterDocRef, defaultData);
         }
-        if (window.renderAll) window.renderAll();
       } catch (err) {
         console.error("Firestore init error:", err);
+        window.appState = defaultData; // Fallback on error
       }
+      
+      // Force immediate render once state is available
+      if (typeof window.renderAll === "function") {
+        window.renderAll();
+      }
+
+      // Real-time listener across all users
+      onSnapshot(rosterDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          window.appState = docSnap.data();
+          if (typeof window.renderAll === "function") {
+            window.renderAll();
+          }
+        }
+      });
+    }
+
+
+
 
       // Real-time listener across all users
       onSnapshot(rosterDocRef, (docSnap) => {
