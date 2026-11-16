@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E2E On-Call Roster</title>
+  <!-- SheetJS for Excel (.xlsx) Parsing & Template Generation -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBQhh0ElwhnI3z2eLLZVz545XEe23JpMcs",
+      authDomain: "e2e-oncall-roster.firebaseapp.com",
+      databaseURL: "https://e2e-oncall-roster-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "e2e-oncall-roster",
+      storageBucket: "e2e-oncall-roster.firebasestorage.app",
+      messagingSenderId: "662686892112",
+      appId: "1:662686892112:web:aaf4dda68982fc04f21155",
+      measurementId: "G-CPP4BCQP71"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const rosterDocRef = doc(db, "roster", "main_data");
+
+    // Default Fallback Data if Firestore is empty
+    const defaultData = {
+      "pin": "0000",
+      "assignments": [
+        {"date": "2026-11-16", "engineer": "Arun Kumar"}, {"date": "2026-11-16", "engineer": "Deepak Pathak"},
+        {"date": "2026-11-17", "engineer": "Arun Kumar"}, {"date": "2026-11-17", "engineer": "Deepak Pathak"},
+        {"date": "2026-11-18", "engineer": "Arun Kumar"}, {"date": "2026-11-18", "engineer": "Deepak Pathak"},
+        {"date": "2026-11-19", "engineer": "Arun Kumar"}, {"date": "2026-11-19", "engineer": "Deepak Pathak"},
+        {"date": "2026-11-20", "engineer": "Arun Kumar"}, {"date": "2026-11-20", "engineer": "Deepak Pathak"},
+        {"date": "2026-11-21", "engineer": "Arun Kumar"}, {"date": "2026-11-21", "engineer": "Deepak Pathak"},
+        {"date": "2026-11-22", "engineer": "Arun Kumar"}, {"date": "2026-11-22", "engineer": "Deepak Pathak"},
+        {"date": "2026-11-23", "engineer": "Abhishek G"}, {"date": "2026-11-23", "engineer": "Kunal Kapoor"},
+        {"date": "2026-11-24", "engineer": "Abhishek G"}, {"date": "2026-11-24", "engineer": "Kunal Kapoor"},
+        {"date": "2026-11-25", "engineer": "Abhishek G"}, {"date": "2026-11-25", "engineer": "Kunal Kapoor"},
+        {"date": "2026-11-26", "engineer": "Abhishek G"}, {"date": "2026-11-26", "engineer": "Kunal Kapoor"},
+        {"date": "2026-11-27", "engineer": "Abhishek G"}, {"date": "2026-11-27", "engineer": "Kunal Kapoor"},
+        {"date": "2026-11-28", "engineer": "Abhishek G"}, {"date": "2026-11-28", "engineer": "Kunal Kapoor"},
+        {"date": "2026-11-29", "engineer": "Abhishek G"}, {"date": "2026-11-29", "engineer": "Kunal Kapoor"},
+        {"date": "2026-11-30", "engineer": "Ashish"}, {"date": "2026-11-30", "engineer": "Barinder"},
+        {"date": "2026-12-01", "engineer": "Ashish"}, {"date": "2026-12-01", "engineer": "Barinder"},
+        {"date": "2026-12-02", "engineer": "Ashish"}, {"date": "2026-12-02", "engineer": "Barinder"},
+        {"date": "2026-12-03", "engineer": "Ashish"}, {"date": "2026-12-03", "engineer": "Barinder"},
+        {"date": "2026-12-04", "engineer": "Ashish"}, {"date": "2026-12-04", "engineer": "Barinder"},
+        {"date": "2026-12-05", "engineer": "Ashish"}, {"date": "2026-12-05", "engineer": "Barinder"},
+        {"date": "2026-12-06", "engineer": "Ashish"}, {"date": "2026-12-06", "engineer": "Barinder"},
+        {"date": "2026-12-07", "engineer": "Sumiran"}, {"date": "2026-12-07", "engineer": "Mohit"},
+        {"date": "2026-12-08", "engineer": "Sumiran"}, {"date": "2026-12-08", "engineer": "Mohit"},
+        {"date": "2026-12-09", "engineer": "Sumiran"}, {"date": "2026-12-09", "engineer": "Mohit"},
+        {"date": "2026-12-10", "engineer": "Sumiran"}, {"date": "2026-12-10", "engineer": "Mohit"},
+        {"date": "2026-12-11", "engineer": "Sumiran"}, {"date": "2026-12-11", "engineer": "Mohit"},
+        {"date": "2026-12-12", "engineer": "Sumiran"}, {"date": "2026-12-12", "engineer": "Mohit"},
+        {"date": "2026-12-13", "engineer": "Sumiran"}, {"date": "2026-12-13", "engineer": "Mohit"},
+        {"date": "2026-12-14", "engineer": "Somil"}, {"date": "2026-12-14", "engineer": "Devesh"},
+        {"date": "2026-12-15", "engineer": "Somil"}, {"date": "2026-12-15", "engineer": "Devesh"},
+        {"date": "2026-12-16", "engineer": "Somil"}, {"date": "2026-12-16", "engineer": "Devesh"},
+        {"date": "2026-12-17", "engineer": "Somil"}, {"date": "2026-12-17", "engineer": "Devesh"},
+        {"date": "2026-12-18", "engineer": "Somil"}, {"date": "2026-12-18", "engineer": "Devesh"},
+        {"date": "2026-12-19", "engineer": "Somil"}, {"date": "2026-12-19", "engineer": "Devesh"},
+        {"date": "2026-12-20", "engineer": "Somil"}, {"date": "2026-12-20", "engineer": "Devesh"}
+      ],
+      "contacts": [
+        {"name": "Kunal Kapoor", "phone": "91-9926822237", "email": "kunal.kapoor@irdeto.com"},
+        {"name": "Somil Gupta", "phone": "91-9355051204", "email": "somil.gupta@irdeto.com"},
+        {"name": "Deepak", "phone": "91-7247434403", "email": "deepak.patidar@irdeto.com"},
+        {"name": "Abhishek Gaddiparthi", "phone": "91-9319057830", "email": "abhishek.Gaddiparthi@irdeto.com"},
+        {"name": "Arun Kumar", "phone": "", "email": ""},
+        {"name": "Ashish Tripathi", "phone": "", "email": ""},
+        {"name": "Mohit Verma", "phone": "", "email": ""},
+        {"name": "Barinder Bhullar", "phone": "", "email": ""},
+        {"name": "Sumiran Agarwal", "phone": "", "email": ""},
+        {"name": "Devesh Sharma", "phone": "", "email": ""}
+      ]
+    };
+
+    window.appState = defaultData;
+
+    // Fetch initial state or initialize Firestore if empty
+    async function initFirestore() {
+      try {
+        const snap = await getDoc(rosterDocRef);
+        if (snap.exists()) {
+          window.appState = snap.data();
+        } else {
+          await setDoc(rosterDocRef, defaultData);
+        }
+        if (window.renderAll) window.renderAll();
+      } catch (err) {
+        console.error("Firestore init error:", err);
+      }
+
+      // Real-time listener across all users
+      onSnapshot(rosterDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          window.appState = docSnap.data();
+          if (window.renderAll) window.renderAll();
+        }
+      });
+    }
+
+    window.persistStateToCloud = async function() {
+      try {
+        await setDoc(rosterDocRef, window.appState);
+      } catch (err) {
+        console.error("Failed to save to Firestore:", err);
+        alert("Failed to save changes to cloud database.");
+      }
+    };
+
+    initFirestore();
+  </script>
+
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-soft: #eff6ff;
+      --success: #059669;
+      --success-soft: #ecfdf5;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --today-ring: #2563eb;
+      --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* Top Header & Navigation */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #fff;
+      padding: 0.85rem 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .brand h1 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.08);
+      padding: 0.35rem;
+      border-radius: 10px;
+    }
+    .tab-btn {
+      border: none;
+      background: transparent;
+      color: #cbd5e1;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.08); }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Layout Container */
+    main {
+      max-width: 1200px;
+      margin: 0.75rem auto;
+      padding: 0 1.5rem 1rem;
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Controls Bar */
+    .controls-bar {
+      background: var(--surface);
+      padding: 1rem 1.25rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .month-nav select, .month-nav button, .btn {
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .month-nav button:hover, .btn:hover { background: var(--surface-alt); border-color: #cbd5e1; }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+      border-color: var(--success);
+    }
+    .btn-success:hover { background: #047857; }
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+    .btn-danger:hover { background: #fecaca; }
+
+    /* Dashboard Grid (Calendar + Right Sidebar) */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 0.5rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-alt);
+    }
+    .card-header h2 { font-size: 1rem; font-weight: 700; }
+
+    /* Calendar Grid */
+    .calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: #1e293b;
+      color: #f8fafc;
+      font-weight: 600;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .calendar-weekdays div {
+      padding: 0.65rem;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.08);
+    }
+    .calendar-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+    .cal-cell {
+      min-height: 112px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      background: #fff;
+      transition: background 0.15s;
+    }
+    .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-cell.weekend { background: #f8fafc; }
+    .cal-cell.other-month { background: #f1f5f9; opacity: 0.55; }
+    .cal-cell.today {
+      box-shadow: inset 0 0 0 2px var(--today-ring);
+      background: #eff6ff;
+    }
+    .cal-date-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.15rem;
+    }
+    .date-num {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .cal-cell.today .date-num {
+      background: var(--primary);
+      color: #fff;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+    }
+
+    .eng-pill {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.3rem 0.55rem;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-left: 3px solid transparent;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Summary Table */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .summary-table th, .summary-table td {
+      padding: 0.6rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-table th {
+      background: var(--surface-alt);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+    .summary-table tr:last-child td { border-bottom: none; }
+    .summary-table tr.total-row {
+      background: var(--primary-soft);
+      font-weight: 700;
+    }
+    .badge-count {
+      display: inline-block;
+      min-width: 28px;
+      text-align: center;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      background: #e2e8f0;
+      color: var(--text);
+    }
+    .badge-count.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    /* Contact Directory Section */
+    .contacts-section { margin-top: 1.5rem; }
+    .contacts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 1rem;
+      padding: 1.25rem;
+    }
+    .contact-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.95rem;
+      background: var(--surface-alt);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .contact-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      background: #fff;
+    }
+    .contact-top {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .contact-name { font-weight: 700; font-size: 0.95rem; }
+    .contact-detail {
+      font-size: 0.83rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .contact-detail a { color: var(--primary); text-decoration: none; }
+    .contact-detail a:hover { text-decoration: underline; }
+
+    /* Tab 2: Manage & Upload Layout */
+    .manage-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .manage-grid { grid-template-columns: 1fr; }
+    }
+    .card-body { padding: 0.75rem; }
+
+    .dropzone {
+      border: 2px dashed #94a3b8;
+      border-radius: 10px;
+      padding: 2rem 1rem;
+      text-align: center;
+      background: var(--surface-alt);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 1rem 0;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      align-items: end;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      flex: 1;
+      min-width: 150px;
+    }
+    .form-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .form-group input, .form-group select {
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .status-banner {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      margin-top: 0.75rem;
+      display: none;
+    }
+    .status-banner.show { display: block; }
+    .status-banner.success { background: var(--success-soft); color: #065f46; border: 1px solid #a7f3d0; }
+    .status-banner.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+    .table-scroll {
+      max-height: 360px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    /* PIN Lock Overlay */
+    #pinOverlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      text-align: center;
+      max-width: 450px;
+      margin: 3rem auto;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <h1>👥 E2E On-Call Roster</h1>
+    </div>
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('view-tab', this)">📅 Roster &amp; Contacts</button>
+      <button class="tab-btn" onclick="switchTab('manage-tab', this)" id="manageTabNavBtn">⚙️ Manage &amp; Upload Roster</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ==================== TAB 1: VIEW ROSTER ==================== -->
+  <section id="view-tab" class="tab-panel active">
+    <div class="controls-bar">
+      <div class="month-nav">
+        <button onclick="changeMonth(-1)">◀ Prev</button>
+        <select id="monthSelect" onchange="renderAll()"></select>
+        <select id="yearSelect" onchange="renderAll()"></select>
+        <button onclick="changeMonth(1)">Next ▶</button>
+        <button onclick="jumpToCurrentMonth()">Current Month</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+        <button class="btn" onclick="exportCurrentExcel()">⬇ Export Excel</button>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <!-- Calendar Card -->
+      <div class="card">
+        <div class="card-header">
+          <h2 id="calendarTitle">November 2026</h2>
+          <span id="coverageBadge" style="font-size:0.8rem; color:var(--text-muted); font-weight:600;"></span>
+        </div>
+        <div class="calendar-weekdays">
+          <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+        </div>
+        <div class="calendar-days" id="calendarGrid"></div>
+      </div>
+
+      <!-- Summary Sidebar -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📊 Selected Month Summary</h2>
+          <span style="font-size:0.78rem; color:var(--text-muted);">Nights Worked</span>
+        </div>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Engineer Name</th>
+              <th style="text-align:center;">Total</th>
+              <th style="text-align:center;">Wknd</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Contact Directory -->
+    <div class="card contacts-section">
+      <div class="card-header">
+        <h2>📞 Engineer Contact Details</h2>
+        <input type="text" id="contactSearch" placeholder="Search engineer..." oninput="renderContacts()"
+               style="padding:0.4rem 0.75rem; border:1px solid var(--border); border-radius:8px; font-size:0.85rem;">
+      </div>
+      <div class="contacts-grid" id="contactsGrid"></div>
+    </div>
+  </section>
+
+  <!-- ==================== TAB 2: MANAGE & UPLOAD ==================== -->
+  <section id="manage-tab" class="tab-panel">
+    <!-- PIN Lock Prompt -->
+    <div id="pinOverlay">
+      <div style="font-size:2.5rem; margin-bottom:0.5rem;">🔒</div>
+      <h3 style="margin-bottom:0.5rem; font-size:1.15rem;">Protected Roster Management</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.25rem;">
+        Please enter your PIN or password to unlock roster edits.<br><span style="font-size:0.78rem;">(Default PIN is <strong>0000</strong>)</span>
+      </p>
+      <div style="display:flex; gap:0.5rem; justify-content:center; max-width:280px; width:100%;">
+        <input type="password" id="pinInput" placeholder="Enter PIN" style="padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:8px; font-size:1rem; text-align:center; flex:1;" onkeydown="if(event.key==='Enter') verifyPin()" />
+        <button class="btn btn-primary" onclick="verifyPin()">Unlock</button>
+      </div>
+      <div id="pinError" style="color:var(--danger); font-size:0.82rem; margin-top:0.75rem; display:none;">Incorrect PIN. Please try again.</div>
+    </div>
+
+    <!-- Unlocked Management Content -->
+    <div id="manageContent" style="display:none;">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:1rem;">
+        <button class="btn btn-danger" onclick="lockManageTab()">🔒 Lock Management Tab</button>
+      </div>
+
+      <div class="manage-grid">
+        <!-- Excel Template & Upload Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>📤 Bulk Update via Excel Template</h2>
+            <button class="btn btn-primary" onclick="downloadExcelTemplate()">⬇ Download Template (.xlsx)</button>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.86rem; color:var(--text-muted);">
+              Upload your monthly roster spreadsheet using our dedicated template (or your existing <code>Oncall_Roster.xlsx</code>).
+              The file should include an <strong>Assignments</strong> sheet (<code>Date</code>, <code>Engineer Name</code>) and optionally a <strong>Contact Details</strong> sheet.
+            </p>
+
+            <div class="dropzone" id="dropzone" onclick="document.getElementById('excelFileInput').click()">
+              <div style="font-size:1.75rem; margin-bottom:0.4rem;">📄</div>
+              <strong>Click to choose an Excel file (.xlsx / .xls)</strong>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:0.25rem;">or drag and drop your file here</div>
+              <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleExcelUpload(event)" />
+            </div>
+
+            <div style="display:flex; gap:1rem; align-items:center; font-size:0.85rem;">
+              <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                <input type="radio" name="uploadMode" value="merge" checked />
+                Merge / Overwrite matching dates (Keep other months)
+              </label>
+              <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+                <input type="radio" name="uploadMode" value="replace" />
+                Replace entire roster
+              </label>
+            </div>
+
+            <div id="uploadStatus" class="status-banner"></div>
+          </div>
+        </div>
+
+        <!-- Manual Shift Assignment Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>✏️ Manual Shift Update</h2>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.86rem; color:var(--text-muted); margin-bottom:1rem;">
+              Assign or update engineers for a specific date or date range.
+            </p>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" id="manualStartDate" />
+              </div>
+              <div class="form-group">
+                <label>End Date (Optional)</label>
+                <input type="date" id="manualEndDate" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Primary Engineer</label>
+                <input type="text" id="manualPrimary" list="engineerSuggestions" placeholder="e.g. Arun Kumar" />
+              </div>
+              <div class="form-group">
+                <label>Secondary Engineer (Optional)</label>
+                <input type="text" id="manualSecondary" list="engineerSuggestions" placeholder="e.g. Deepak Pathak" />
+              </div>
+            </div>
+            <datalist id="engineerSuggestions"></datalist>
+            <div style="display:flex; gap:0.6rem;">
+              <button class="btn btn-primary" onclick="saveManualShift()">Save Shift Assignment</button>
+              <button class="btn btn-danger" onclick="clearDateShift()">Clear Date(s)</button>
+            </div>
+            <div id="manualStatus" class="status-banner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manage Contacts & PIN Settings -->
+      <div class="manage-grid" style="grid-template-columns: 2fr 1fr;">
+        <!-- Manage Contacts Table -->
+        <div class="card">
+          <div class="card-header">
+            <h2>👥 Manage Engineer Contacts</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Engineer Name</label>
+                <input type="text" id="newContactName" placeholder="Full Name" />
+              </div>
+              <div class="form-group">
+                <label>Phone / Mobile</label>
+                <input type="text" id="newContactPhone" placeholder="91-XXXXXXXXXX" />
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="newContactEmail" placeholder="name@company.com" />
+              </div>
+              <button class="btn btn-primary" onclick="addOrUpdateContact()">Add / Update</button>
+            </div>
+
+            <div class="table-scroll">
+              <table class="summary-table">
+                <thead>
+                  <tr>
+                    <th>Engineer Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th style="text-align:right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="manageContactsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- PIN Configuration Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>🔐 Security PIN Settings</h2>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.83rem; color:var(--text-muted); margin-bottom:1rem;">
+              Change the PIN required to access this management tab.
+            </p>
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label>New PIN / Password</label>
+              <input type="text" id="newPinInput" placeholder="e.g. 1234" />
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="updatePin()">Update PIN</button>
+            <div id="pinChangeStatus" class="status-banner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const PALETTE = [
+    { bg: "#dbeafe", text: "#1e40af", border: "#3b82f6" },
+    { bg: "#dcfce7", text: "#166534", border: "#22c55e" },
+    { bg: "#fef3c7", text: "#92400e", border: "#f59e0b" },
+    { bg: "#f3e8ff", text: "#6b21a8", border: "#a855f7" },
+    { bg: "#ffe4e6", text: "#9f1239", border: "#f43f5e" },
+    { bg: "#ccfbf1", text: "#115e59", border: "#14b8a6" },
+    { bg: "#e0e7ff", text: "#3730a3", border: "#6366f1" },
+    { bg: "#ffedd5", text: "#9a3412", border: "#f97316" },
+    { bg: "#fae8ff", text: "#86198f", border: "#d946ef" },
+    { bg: "#e0f2fe", text: "#075985", border: "#0ea5e9" }
+  ];
+
+  let isUnlocked = false;
+
+  function getEngineerColor(name) {
+    let hash = 0;
+    const clean = (name || "").trim().toLowerCase();
+    for (let i = 0; i < clean.length; i++) {
+      hash = clean.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return PALETTE[Math.abs(hash) % PALETTE.length];
+  }
+
+  function switchTab(tabId, btn) {
+    if (tabId === 'manage-tab' && !isUnlocked) {
+      document.getElementById("pinInput").value = "";
+      document.getElementById("pinError").style.display = "none";
+    }
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById(tabId).classList.add("active");
+    btn.classList.add("active");
+  }
+
+  function verifyPin() {
+    const entered = document.getElementById("pinInput").value;
+    const currentPin = (window.appState && window.appState.pin) ? window.appState.pin : "0000";
+    if (entered === currentPin) {
+      isUnlocked = true;
+      document.getElementById("pinOverlay").style.display = "none";
+      document.getElementById("manageContent").style.display = "block";
+      renderManageTables();
+    } else {
+      document.getElementById("pinError").style.display = "block";
+    }
+  }
+
+  function lockManageTab() {
+    isUnlocked = false;
+    document.getElementById("pinOverlay").style.display = "flex";
+    document.getElementById("manageContent").style.display = "none";
+  }
+
+  function updatePin() {
+    const newPin = document.getElementById("newPinInput").value.trim();
+    if (!newPin) return;
+    window.appState.pin = newPin;
+    window.persistStateToCloud();
+    document.getElementById("newPinInput").value = "";
+    showBanner("pinChangeStatus", "PIN updated successfully!");
+  }
+
+  function initSelectors() {
+    const mSel = document.getElementById("monthSelect");
+    const ySel = document.getElementById("yearSelect");
+    MONTHS.forEach((m, idx) => {
+      const opt = document.createElement("option");
+      opt.value = idx;
+      opt.textContent = m;
+      mSel.appendChild(opt);
+    });
+    for (let y = 2025; y <= 2030; y++) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      ySel.appendChild(opt);
+    }
+    const now = new Date();
+    mSel.value = now.getMonth();
+    ySel.value = now.getFullYear();
+  }
+
+  function changeMonth(delta) {
+    const mSel = document.getElementById("monthSelect");
+    const ySel = document.getElementById("yearSelect");
+    let m = parseInt(mSel.value, 10) + delta;
+    let y = parseInt(ySel.value, 10);
+    if (m < 0) { m = 11; y--; }
+    if (m > 11) { m = 0; y++; }
+    mSel.value = m;
+    ySel.value = y;
+    renderAll();
+  }
+
+  function jumpToCurrentMonth() {
+    const now = new Date();
+    document.getElementById("monthSelect").value = now.getMonth();
+    document.getElementById("yearSelect").value = now.getFullYear();
+    renderAll();
+  }
+
+  function formatDateISO(year, monthZeroIdx, day) {
+    const mm = String(monthZeroIdx + 1).padStart(2, "0");
+    const dd = String(day).padStart(2, "0");
+    return `${year}-${mm}-${dd}`;
+  }
+
+  window.renderAll = function() {
+    renderCalendarAndSummary();
+    renderContacts();
+    if (isUnlocked) renderManageTables();
+  }
+
+  function renderCalendarAndSummary() {
+    if (!window.appState) return;
+    const year = parseInt(document.getElementById("yearSelect").value, 10);
+    const month = parseInt(document.getElementById("monthSelect").value, 10);
+    document.getElementById("calendarTitle").textContent = `${MONTHS[month]} ${year}`;
+
+    const byDate = {};
+    (window.appState.assignments || []).forEach(item => {
+      if (!byDate[item.date]) byDate[item.date] = [];
+      byDate[item.date].push(item.engineer);
+    });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    const todayStr = new Date().toLocaleDateString('en-CA');
+
+    const grid = document.getElementById("calendarGrid");
+    grid.innerHTML = "";
+
+    const counts = {};
+    const weekendCounts = {};
+    (window.appState.contacts || []).forEach(c => {
+      counts[c.name] = 0;
+      weekendCounts[c.name] = 0;
+    });
+
+    let coveredDays = 0;
+
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const cell = document.createElement("div");
+      cell.className = "cal-cell other-month";
+      cell.innerHTML = `<div class="cal-date-row"><span class="date-num">${prevMonthDays - i}</span></div>`;
+      grid.appendChild(cell);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = formatDateISO(year, month, d);
+      const dayOfWeek = new Date(year, month, d).getDay();
+      const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+      const engineers = byDate[dateStr] || [];
+      if (engineers.length > 0) coveredDays++;
+
+      const cell = document.createElement("div");
+      cell.className = "cal-cell" + (isWeekend ? " weekend" : "") + (dateStr === todayStr ? " today" : "");
+      cell.onclick = () => {
+        document.getElementById("manualStartDate").value = dateStr;
+        document.getElementById("manualPrimary").value = engineers[0] || "";
+        document.getElementById("manualSecondary").value = engineers[1] || "";
+      };
+      cell.title = "Click to load date into Manage tab editor";
+
+      let html = `<div class="cal-date-row"><span class="date-num">${d}</span></div>`;
+      engineers.forEach(eng => {
+        const col = getEngineerColor(eng);
+        html += `
+          <div class="eng-pill" style="background:${col.bg}; color:${col.text}; border-left-color:${col.border};">
+            <span>${eng}</span>
+          </div>`;
+
+        const matchedKey = findCanonicalEngineerName(eng);
+        counts[matchedKey] = (counts[matchedKey] || 0) + 1;
+        if (isWeekend) {
+          weekendCounts[matchedKey] = (weekendCounts[matchedKey] || 0) + 1;
+        }
+      });
+
+      cell.innerHTML = html;
+      grid.appendChild(cell);
+    }
+
+    const totalCells = firstDay + daysInMonth;
+    const trailing = (7 - (totalCells % 7)) % 7;
+    for (let i = 1; i <= trailing; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cal-cell other-month";
+      cell.innerHTML = `<div class="cal-date-row"><span class="date-num">${i}</span></div>`;
+      grid.appendChild(cell);
+    }
+
+    document.getElementById("coverageBadge").textContent = `${coveredDays} / ${daysInMonth} days scheduled`;
+
+    const tbody = document.getElementById("summaryTableBody");
+    tbody.innerHTML = "";
+    let totalNights = 0;
+    let totalWknd = 0;
+
+    const sortedEngineers = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+    sortedEngineers.forEach(name => {
+      const n = counts[name];
+      const w = weekendCounts[name] || 0;
+      totalNights += n;
+      totalWknd += w;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${name}</strong></td>
+        <td style="text-align:center;"><span class="badge-count ${n > 0 ? 'active' : ''}">${n}</span></td>
+        <td style="text-align:center; color:var(--text-muted);">${w}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const totalTr = document.createElement("tr");
+    totalTr.className = "total-row";
+    totalTr.innerHTML = `
+      <td>Total Shifts</td>
+      <td style="text-align:center;">${totalNights}</td>
+      <td style="text-align:center;">${totalWknd}</td>
+    `;
+    tbody.appendChild(totalTr);
+  }
+
+  function findCanonicalEngineerName(shortName) {
+    if (!window.appState || !window.appState.contacts) return shortName;
+    const lower = shortName.trim().toLowerCase();
+    const exact = window.appState.contacts.find(c => c.name.toLowerCase() === lower);
+    if (exact) return exact.name;
+    const prefix = window.appState.contacts.find(c =>
+      c.name.toLowerCase().startsWith(lower.split(" ")[0])
+    );
+    return prefix ? prefix.name : shortName.trim();
+  }
+
+  function renderContacts() {
+    if (!window.appState) return;
+    const query = (document.getElementById("contactSearch").value || "").toLowerCase();
+    const grid = document.getElementById("contactsGrid");
+    grid.innerHTML = "";
+
+    (window.appState.contacts || [])
+      .filter(c => c.name.toLowerCase().includes(query) || (c.email || "").toLowerCase().includes(query))
+      .forEach(c => {
+        const col = getEngineerColor(c.name);
+        const initials = c.name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase();
+        const card = document.createElement("div");
+        card.className = "contact-card";
+        card.innerHTML = `
+          <div class="contact-top">
+            <div class="avatar" style="background:${col.border};">${initials}</div>
+            <div class="contact-name">${c.name}</div>
+          </div>
+          <div class="contact-detail">📱 ${c.phone ? `<a href="tel:${c.phone}">${c.phone}</a>` : "<span>Not provided</span>"}</div>
+          <div class="contact-detail">✉️ ${c.email ? `<a href="mailto:${c.email}">${c.email}</a>` : "<span>Not provided</span>"}</div>
+        `;
+        grid.appendChild(card);
+      });
+  }
+
+  function renderManageTables() {
+    if (!window.appState) return;
+    const tbody = document.getElementById("manageContactsBody");
+    const datalist = document.getElementById("engineerSuggestions");
+    tbody.innerHTML = "";
+    datalist.innerHTML = "";
+
+    (window.appState.contacts || []).forEach((c, index) => {
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      datalist.appendChild(opt);
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${c.name}</strong></td>
+        <td>${c.phone || "-"}</td>
+        <td>${c.email || "-"}</td>
+        <td style="text-align:right;">
+          <button class="btn" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="editContact(${index})">Edit</button>
+          <button class="btn btn-danger" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="deleteContact(${index})">✕</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function showBanner(id, msg, isError = false) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = `status-banner show ${isError ? "error" : "success"}`;
+    setTimeout(() => el.classList.remove("show"), 5000);
+  }
+
+  function getDatesBetween(startStr, endStr) {
+    const dates = [];
+    let curr = new Date(startStr + "T00:00:00");
+    const end = endStr ? new Date(endStr + "T00:00:00") : curr;
+    while (curr <= end) {
+      dates.push(curr.toLocaleDateString('en-CA'));
+      curr.setDate(curr.getDate() + 1);
+    }
+    return dates;
+  }
+
+  window.saveManualShift = function() {
+    const start = document.getElementById("manualStartDate").value;
+    const end = document.getElementById("manualEndDate").value;
+    const pri = document.getElementById("manualPrimary").value.trim();
+    const sec = document.getElementById("manualSecondary").value.trim();
+
+    if (!start || !pri) {
+      showBanner("manualStatus", "Please select a Start Date and Primary Engineer.", true);
+      return;
+    }
+    const targetDates = getDatesBetween(start, end);
+    window.appState.assignments = window.appState.assignments.filter(a => !targetDates.includes(a.date));
+
+    targetDates.forEach(d => {
+      window.appState.assignments.push({ date: d, engineer: pri });
+      if (sec) window.appState.assignments.push({ date: d, engineer: sec });
+    });
+
+    window.persistStateToCloud();
+    window.renderAll();
+    showBanner("manualStatus", `Updated ${targetDates.length} day(s) starting ${start}.`);
+  }
+
+  window.clearDateShift = function() {
+    const start = document.getElementById("manualStartDate").value;
+    const end = document.getElementById("manualEndDate").value;
+    if (!start) return;
+    const targetDates = getDatesBetween(start, end);
+    window.appState.assignments = window.appState.assignments.filter(a => !targetDates.includes(a.date));
+    window.persistStateToCloud();
+    window.renderAll();
+    showBanner("manualStatus", `Cleared assignments for ${targetDates.length} day(s).`);
+  }
+
+  window.addOrUpdateContact = function() {
+    const name = document.getElementById("newContactName").value.trim();
+    const phone = document.getElementById("newContactPhone").value.trim();
+    const email = document.getElementById("newContactEmail").value.trim();
+    if (!name) return;
+
+    const existingIdx = window.appState.contacts.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
+    if (existingIdx >= 0) {
+      window.appState.contacts[existingIdx] = { name, phone, email };
+    } else {
+      window.appState.contacts.push({ name, phone, email });
+    }
+    document.getElementById("newContactName").value = "";
+    document.getElementById("newContactPhone").value = "";
+    document.getElementById("newContactEmail").value = "";
+    window.persistStateToCloud();
+    window.renderAll();
+    renderManageTables();
+  }
+
+  window.editContact = function(idx) {
+    const c = window.appState.contacts[idx];
+    document.getElementById("newContactName").value = c.name;
+    document.getElementById("newContactPhone").value = c.phone;
+    document.getElementById("newContactEmail").value = c.email;
+  }
+
+  window.deleteContact = function(idx) {
+    window.appState.contacts.splice(idx, 1);
+    window.persistStateToCloud();
+    window.renderAll();
+    renderManageTables();
+  }
+
+  window.downloadExcelTemplate = function() {
+    const wb = XLSX.utils.book_new();
+    const sampleAssignments = [
+      { "Date": "2026-12-01", "Engineer Name": "Ashish" },
+      { "Date": "2026-12-01", "Engineer Name": "Barinder" }
+    ];
+    const wsAssign = XLSX.utils.json_to_sheet(sampleAssignments);
+    wsAssign["!cols"] = [{ wch: 15 }, { wch: 25 }];
+    XLSX.utils.book_append_sheet(wb, wsAssign, "Assignments");
+
+    const sampleContacts = window.appState.contacts.map((c, idx) => ({
+      "S.No.": idx + 1,
+      "Engineer Name": c.name,
+      "Contact": c.phone,
+      "Email": c.email
+    }));
+    const wsContacts = XLSX.utils.json_to_sheet(sampleContacts);
+    wsContacts["!cols"] = [{ wch: 8 }, { wch: 25 }, { wch: 18 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsContacts, "Contact Details");
+
+    XLSX.writeFile(wb, "Oncall_Roster_Template.xlsx");
+  }
+
+  window.exportCurrentExcel = function() {
+    const wb = XLSX.utils.book_new();
+    const sorted = [...window.appState.assignments].sort((a, b) => a.date.localeCompare(b.date));
+    const wsAssign = XLSX.utils.json_to_sheet(
+      sorted.map(a => ({ "Date": a.date, "Engineer Name": a.engineer }))
+    );
+    wsAssign["!cols"] = [{ wch: 15 }, { wch: 25 }];
+    XLSX.utils.book_append_sheet(wb, wsAssign, "Assignments");
+
+    const wsContacts = XLSX.utils.json_to_sheet(
+      window.appState.contacts.map((c, i) => ({
+        "S.No.": i + 1,
+        "Engineer Name": c.name,
+        "Contact": c.phone,
+        "Email": c.email
+      }))
+    );
+    wsContacts["!cols"] = [{ wch: 8 }, { wch: 25 }, { wch: 18 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsContacts, "Contact Details");
+
+    XLSX.writeFile(wb, "E2E_Oncall_Roster_Export.xlsx");
+  }
+
+  function parseExcelDate(val) {
+    if (!val) return null;
+    if (val instanceof Date && !isNaN(val)) {
+      const y = val.getFullYear();
+      const m = String(val.getMonth() + 1).padStart(2, "0");
+      const d = String(val.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+    if (typeof val === "number") {
+      const parsed = XLSX.SSF.parse_date_code(val);
+      if (parsed) {
+        return `${parsed.y}-${String(parsed.m).padStart(2, "0")}-${String(parsed.d).padStart(2, "0")}`;
+      }
+    }
+    const str = String(val).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
+    const d = new Date(str);
+    if (!isNaN(d)) return d.toLocaleDateString('en-CA');
+    return null;
+  }
+
+  window.handleExcelUpload = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: "array", cellDates: true });
+
+        const assignSheetName = wb.SheetNames.find(n => n.toLowerCase().includes("assign")) || wb.SheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[assignSheetName]);
+
+        const newAssignments = [];
+        rows.forEach(r => {
+          const rawDate = r["Date"] || r["date"] || r["DATE"];
+          const rawEng = r["Engineer Name"] || r["Engineer"] || r["Name"];
+          const iso = parseExcelDate(rawDate);
+          if (iso && rawEng) {
+            newAssignments.push({ date: iso, engineer: String(rawEng).trim() });
+          }
+        });
+
+        if (newAssignments.length === 0) {
+          showBanner("uploadStatus", "No valid rows found. Ensure columns are named 'Date' and 'Engineer Name'.", true);
+          return;
+        }
+
+        const mode = document.querySelector('input[name="uploadMode"]:checked').value;
+        if (mode === "replace") {
+          window.appState.assignments = newAssignments;
+        } else {
+          const uploadedDates = new Set(newAssignments.map(a => a.date));
+          window.appState.assignments = [
+            ...window.appState.assignments.filter(a => !uploadedDates.has(a.date)),
+            ...newAssignments
+          ];
+        }
+
+        const contactSheetName = wb.SheetNames.find(n => n.toLowerCase().includes("contact"));
+        if (contactSheetName) {
+          const cRows = XLSX.utils.sheet_to_json(wb.Sheets[contactSheetName]);
+          const parsedContacts = cRows
+            .filter(r => r["Engineer Name"] || r["Name"])
+            .map(r => ({
+              name: String(r["Engineer Name"] || r["Name"]).trim(),
+              phone: String(r["Contact"] || r["Phone"] || "").trim(),
+              email: String(r["Email"] || "").trim()
+            }));
+          if (parsedContacts.length > 0) {
+            window.appState.contacts = parsedContacts;
+          }
+        }
+
+        window.persistStateToCloud();
+        window.renderAll();
+        renderManageTables();
+        showBanner("uploadStatus", `Successfully imported ${newAssignments.length} shift entries from "${file.name}".`);
+      } catch (err) {
+        showBanner("uploadStatus", "Failed to read Excel file: " + err.message, true);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // Initialize
+  initSelectors();
+</script>
+</body>
+</html>
